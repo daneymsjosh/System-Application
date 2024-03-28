@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import join_room, leave_room, send, SocketIO
+import firebase_admin
+from firebase_admin import credentials, auth, firestore
 import random
 from string import ascii_uppercase
 from ciphers import enhanced_rail_fence_encrypt, enhanced_rail_fence_decrypt
@@ -7,6 +9,11 @@ from ciphers import enhanced_rail_fence_encrypt, enhanced_rail_fence_decrypt
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "railfence"
 socketio = SocketIO(app)
+
+cred = credentials.Certificate("sdk_key/thesis-system-key.json")
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 rooms = {}
 
@@ -22,6 +29,44 @@ def generate_unique_code(length):
     return code
 
 @app.route("/", methods=["POST", "GET"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        try:
+            user = auth.get_user_by_email(email)
+            # Handle login and session management here
+            # You can redirect the user to another page after successful login
+            session["user"] = user.uid
+            return redirect(url_for("home"))
+        except Exception as e:
+            error = str(e)
+            return render_template("login.html", error=error)
+    return render_template("login.html")
+
+@app.route("/signup", methods=["POST", "GET"])
+def signup():
+    if request.method == "POST":
+        email = request.form.get("email")
+        username = request.form.get("username")
+        password = request.form.get("password")
+        try:
+            user = auth.create_user(email=email, password=password)
+            # Save user to Firestore Users collection
+            db.collection('Users').document(user.uid).set({'email': email, 'username': username})
+            # You can redirect the user to another page after successful signup
+            return redirect(url_for("login"))
+        except Exception as e:
+            error = str(e)
+            return render_template("signup.html", error=error)
+    return render_template("signup.html")
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+@app.route("/home", methods=["POST", "GET"])
 def home():
     session.clear()
     if request.method == "POST":

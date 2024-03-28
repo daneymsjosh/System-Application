@@ -12,6 +12,19 @@
       integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
       crossorigin="anonymous"
     ></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.2/firebase-auth.js"></script>
+    <script>
+      var firebaseConfig = {
+        apiKey: "AIzaSyAiacOv6e4ZNyCdKQh4chFYPYWI4XB-Jsk",
+        authDomain: "thesis-system-3e86e.firebaseapp.com",
+        projectId: "thesis-system-3e86e",
+        storageBucket: "thesis-system-3e86e.appspot.com",
+        messagingSenderId: "806009555938",
+        appId: "1:806009555938:web:eb1dd158748a6b630447bb",
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
   </head>
   <body>
     <div class="content">{% block content %} {% endblock %}</div>

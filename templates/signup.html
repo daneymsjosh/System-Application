@@ -1,0 +1,23 @@
+{% extends 'base.html' %} {% block content %}
+<form method="post" class="buttons">
+  <h3>Sign Up</h3>
+  <div>
+    <label>Email:</label>
+    <input type="email" placeholder="Enter your email" name="email" />
+  </div>
+  <div>
+    <label>Username:</label>
+    <input type="text" placeholder="Enter your username" name="username" />
+  </div>
+  <div>
+    <label>Password:</label>
+    <input type="password" placeholder="Enter your password" name="password" />
+  </div>
+  <button type="submit" name="signup" class="create-btn">Sign Up</button>
+  {% if error %}
+  <ul>
+    <li>{{ error }}</li>
+  </ul>
+  {% endif %}
+</form>
+{% endblock %}
