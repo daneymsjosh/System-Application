@@ -14,5 +14,16 @@
     <li>{{error}}</li>
   </ul>
   {% endif %}
+
+  <h3>Available Rooms:</h3>
+  <ul>
+    {% for room in rooms %}
+    <li>
+      <a href="{{ url_for('room', code=room.code) }}" class="room-link"
+        >{{ room.code }}</a
+      >
+    </li>
+    {% endfor %}
+  </ul>
 </form>
 {% endblock %}

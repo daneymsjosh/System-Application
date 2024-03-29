@@ -85,8 +85,7 @@ def home():
         if create != False:
             room = generate_unique_code(4)
             rooms[room] = {"members": 0, "messages": []}
-            rooms_ref = user_ref.collection("Rooms")
-            rooms_ref.document(room).set({"code": room})
+            db.collection('Rooms').document(room).set({"code": room})
         elif code not in rooms:
             return render_template("home.html", error="Room does not exist.", code=code, name=name)
         
@@ -94,7 +93,10 @@ def home():
         session["name"] = name
         return redirect(url_for("room"))
 
-    return render_template("home.html")
+    rooms_ref = db.collection("Rooms").stream()
+    rooms_data = [room.to_dict() for room in rooms_ref]
+
+    return render_template("home.html", rooms=rooms_data)
 
 @app.route("/room")
 def room():
@@ -103,21 +105,6 @@ def room():
         return redirect(url_for("home"))
 
     return render_template("room.html", code=room, messages=rooms[room]["messages"])
-
-@app.route("/encrypt", methods=["POST"])
-def encrypt_message():
-    data = request.get_json()
-    plaintext = data['plaintext']
-    ciphertext, key = enhanced_rail_fence_encrypt(plaintext)
-    return jsonify({'ciphertext': ciphertext, 'key': key})
-
-@app.route("/decrypt", methods=["POST"])
-def decrypt_message():
-    data = request.get_json()
-    ciphertext = data['ciphertext']
-    key = data['key']
-    plaintext = enhanced_rail_fence_decrypt(ciphertext, key)
-    return jsonify({'plaintext': plaintext})
 
 @socketio.on("message")
 def message(data):
@@ -142,6 +129,16 @@ def message(data):
     print(f"{session.get('name')} said: {data['data']}")
     print(f"{session.get('name')} encrypted: {content['message']}")
     print(f"{session.get('name')} decrypted: {content['decrypted_message']}")
+
+    room_ref = db.collection("Rooms").document(room)
+    messages_ref = room_ref.collection("Messages")
+    message_data = {
+        "name": session.get("name"),
+        "encrypted_message": content["message"],
+        "decrypted_message": content["decrypted_message"],
+        "date/time": firestore.SERVER_TIMESTAMP
+    }
+    messages_ref.add(message_data)
 
 @socketio.on("connect")
 def connect(auth):
