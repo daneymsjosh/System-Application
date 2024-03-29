@@ -63,20 +63,24 @@ def signup():
 
 @app.route("/home", methods=["POST", "GET"])
 def home():
-    session.clear()
+    if "user" not in session:
+        return redirect(url_for("login"))
+    
     if request.method == "POST":
-        name = request.form.get("name")
+        user_uid = session["user"]
+        user_ref = db.collection("Users").document(user_uid)
+        user_data = user_ref.get().to_dict()
+        if user_data:
+            name = user_data.get("username")
+
         code = request.form.get("code")
         logout = request.form.get("logout", False)
         join = request.form.get("join", False)
         create = request.form.get("create", False)
 
-        if logout != False and not name:
+        if logout != False:
             session.clear()
             return redirect(url_for("login"))
-        
-        if not name:
-            return render_template("home.html", error="Please enter a name.", code=code, name=name)
 
         if join != False and not code:
             return render_template("home.html", error="Please enter a room code.", code=code, name=name)
