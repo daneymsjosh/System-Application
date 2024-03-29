@@ -61,20 +61,20 @@ def signup():
             return render_template("signup.html", error=error)
     return render_template("signup.html")
 
-@app.route("/logout", methods=["POST"])
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-
 @app.route("/home", methods=["POST", "GET"])
 def home():
     session.clear()
     if request.method == "POST":
         name = request.form.get("name")
         code = request.form.get("code")
+        logout = request.form.get("logout", False)
         join = request.form.get("join", False)
         create = request.form.get("create", False)
 
+        if logout != False and not name:
+            session.clear()
+            return redirect(url_for("login"))
+        
         if not name:
             return render_template("home.html", error="Please enter a name.", code=code, name=name)
 

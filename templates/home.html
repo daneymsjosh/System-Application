@@ -16,9 +16,7 @@
   </div>
   <button type="submit" name="create" class="create-btn">Create a Room</button>
   <div>
-    <form method="post" action="{{ url_for('logout') }}">
-      <button type="submit">Logout</button>
-    </form>
+    <button type="submit" name="logout">Logout</button>
   </div>
   {% if error %}
   <ul>
