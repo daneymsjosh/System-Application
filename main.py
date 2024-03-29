@@ -35,8 +35,6 @@ def login():
         password = request.form.get("password")
         try:
             user = auth.get_user_by_email(email)
-            # Handle login and session management here
-            # You can redirect the user to another page after successful login
             session["user"] = user.uid
             return redirect(url_for("home"))
         except Exception as e:
@@ -52,9 +50,7 @@ def signup():
         password = request.form.get("password")
         try:
             user = auth.create_user(email=email, password=password)
-            # Save user to Firestore Users collection
             db.collection('Users').document(user.uid).set({'email': email, 'username': username})
-            # You can redirect the user to another page after successful signup
             return redirect(url_for("login"))
         except Exception as e:
             error = str(e)
@@ -89,6 +85,8 @@ def home():
         if create != False:
             room = generate_unique_code(4)
             rooms[room] = {"members": 0, "messages": []}
+            rooms_ref = user_ref.collection("Rooms")
+            rooms_ref.document(room).set({"code": room})
         elif code not in rooms:
             return render_template("home.html", error="Room does not exist.", code=code, name=name)
         
