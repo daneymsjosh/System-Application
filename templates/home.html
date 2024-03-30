@@ -1,10 +1,6 @@
 {% extends 'base.html' %} {% block content %}
-<form method="post" class="buttons">
+<form method="post" class="buttons" id="join-form">
   <h3>Enter The Chat Room</h3>
-  <div class="join">
-    <input type="text" placeholder="Room Code" name="code" value="{{code}}" />
-    <button type="submit" name="join">Join a Room</button>
-  </div>
   <button type="submit" name="create" class="create-btn">Create a Room</button>
   <div>
     <button type="submit" name="logout">Logout</button>
@@ -19,11 +15,27 @@
   <ul>
     {% for room in rooms %}
     <li>
-      <a href="{{ url_for('room', code=room.code) }}" class="room-link"
-        >{{ room.code }}</a
-      >
+      <button type="button" class="room-link" data-code="{{ room.code }}">
+        {{ room.code }}
+      </button>
     </li>
     {% endfor %}
   </ul>
+  <input type="hidden" name="code" id="room-code-input" />
+  <!-- Hidden input field to store the room code -->
 </form>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const roomLinks = document.querySelectorAll(".room-link");
+    roomLinks.forEach((link) => {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        const roomCode = link.getAttribute("data-code");
+        console.log("Room code sent to server:", roomCode);
+        document.getElementById("room-code-input").value = roomCode; // Set the room code in the hidden input field
+        document.getElementById("join-form").submit(); // Submit the form to send the room code to the server
+      });
+    });
+  });
+</script>
 {% endblock %}
