@@ -38,6 +38,7 @@
       .signInWithEmailAndPassword(email, password)
       .then((cred) => {
         loginForm.reset();
+        const userUID = cred.user.uid;
         localStorage.setItem("isLoggedIn", true); // Store login status as boolean
         window.location.replace("{{ url_for('home') }}");
       })

@@ -30,6 +30,14 @@ def generate_unique_code(length):
 
 @app.route("/", methods=["POST", "GET"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        user = auth.get_user_by_email(email)
+        # user_uid = request.json.get("user_uid")
+        session["user"] = user.uid
+        print(user.uid)
+        return redirect(url_for("home"))
+    
     return render_template("login.html")
 
 @app.route("/signup", methods=["POST", "GET"])
@@ -38,15 +46,19 @@ def signup():
 
 @app.route("/home", methods=["POST", "GET"])
 def home():
-    session.clear()
+    if "user" not in session:
+        print("Not in session")
+        return redirect(url_for("login"))
+    
     if request.method == "POST":
-        name = request.form.get("name")
+        user_uid = session["user"]
+        user_ref = db.collection("Users").document(user_uid)
+        user_data = user_ref.get().to_dict()
+        if user_data:
+            name = user_data.get("username")
         code = request.form.get("code")
         join = request.form.get("join", False)
         create = request.form.get("create", False)
-        
-        if not name:
-            return render_template("home.html", error="Please enter a name.", code=code, name=name)
 
         if join != False and not code:
             return render_template("home.html", error="Please enter a room code.", code=code, name=name)
@@ -55,6 +67,7 @@ def home():
         if create != False:
             room = generate_unique_code(4)
             rooms[room] = {"members": 0, "messages": []}
+            db.collection('Rooms').document(room).set({"code": room})
         elif code not in rooms:
             return render_template("home.html", error="Room does not exist.", code=code, name=name)
         
