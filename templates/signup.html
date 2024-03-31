@@ -45,7 +45,8 @@
       .createUserWithEmailAndPassword(email, password)
       .then((cred) => {
         return db.collection("Users").doc(cred.user.uid).set({
-          LastName: signupForm["username"].value,
+          email: signupForm["email"].value,
+          username: signupForm["username"].value,
         });
       })
       .then(() => {
