@@ -1,5 +1,5 @@
 {% extends 'base.html' %} {% block content %}
-<form method="post" class="buttons">
+<form action="/sign-up" id="signup-form" method="POST" class="buttons">
   <h3>Sign Up</h3>
   <div>
     <label>Email:</label>
@@ -7,7 +7,12 @@
   </div>
   <div>
     <label>Username:</label>
-    <input type="text" placeholder="Enter your username" name="username" />
+    <input
+      type="text"
+      placeholder="Enter your username"
+      id="username"
+      name="username"
+    />
   </div>
   <div>
     <label>Password:</label>
@@ -20,4 +25,37 @@
   </ul>
   {% endif %}
 </form>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-storage.js"></script>
+<script src="static/firebase-init.js"></script>
+<script>
+  // Signup
+  const signupForm = document.querySelector("#signup-form");
+  signupForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    // Get User Info
+    const email = signupForm["email"].value;
+    const password = signupForm["password"].value;
+
+    // Signup the User
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then((cred) => {
+        return db.collection("Users").doc(cred.user.uid).set({
+          LastName: signupForm["username"].value,
+        });
+      })
+      .then(() => {
+        signupForm.reset();
+        localStorage.setItem("isLoggedIn", true); // Store login status as boolean
+        window.location.replace("{{ url_for('home') }}");
+      })
+      .catch((error) => {
+        console.log(error.message);
+      });
+  });
+</script>
 {% endblock %}

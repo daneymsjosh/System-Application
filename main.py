@@ -30,35 +30,10 @@ def generate_unique_code(length):
 
 @app.route("/", methods=["POST", "GET"])
 def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        try:
-            user = auth.get_user_by_email(email)
-            # Handle login and session management here
-            # You can redirect the user to another page after successful login
-            session["user"] = user.uid
-            return redirect(url_for("home"))
-        except Exception as e:
-            error = str(e)
-            return render_template("login.html", error=error)
     return render_template("login.html")
 
 @app.route("/signup", methods=["POST", "GET"])
 def signup():
-    if request.method == "POST":
-        email = request.form.get("email")
-        username = request.form.get("username")
-        password = request.form.get("password")
-        try:
-            user = auth.create_user(email=email, password=password)
-            # Save user to Firestore Users collection
-            db.collection('Users').document(user.uid).set({'email': email, 'username': username})
-            # You can redirect the user to another page after successful signup
-            return redirect(url_for("login"))
-        except Exception as e:
-            error = str(e)
-            return render_template("signup.html", error=error)
     return render_template("signup.html")
 
 @app.route("/home", methods=["POST", "GET"])
@@ -67,13 +42,8 @@ def home():
     if request.method == "POST":
         name = request.form.get("name")
         code = request.form.get("code")
-        logout = request.form.get("logout", False)
         join = request.form.get("join", False)
         create = request.form.get("create", False)
-
-        if logout != False and not name:
-            session.clear()
-            return redirect(url_for("login"))
         
         if not name:
             return render_template("home.html", error="Please enter a name.", code=code, name=name)
