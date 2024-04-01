@@ -30,14 +30,6 @@ def generate_unique_code(length):
 
 @app.route("/", methods=["POST", "GET"])
 def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        user = auth.get_user_by_email(email)
-        # user_uid = request.json.get("user_uid")
-        session["user"] = user.uid
-        print(user.uid)
-        return redirect(url_for("home"))
-    
     return render_template("login.html")
 
 @app.route("/signup", methods=["POST", "GET"])
@@ -45,113 +37,81 @@ def signup():
     return render_template("signup.html")
 
 @app.route("/home", methods=["POST", "GET"])
-def home():
-    if "user" not in session:
-        print("Not in session")
-        return redirect(url_for("login"))
-    
-    if request.method == "POST":
-        user_uid = session["user"]
-        user_ref = db.collection("Users").document(user_uid)
-        user_data = user_ref.get().to_dict()
-        if user_data:
-            name = user_data.get("username")
-        code = request.form.get("code")
-        join = request.form.get("join", False)
-        create = request.form.get("create", False)
-
-        if join != False and not code:
-            return render_template("home.html", error="Please enter a room code.", code=code, name=name)
-        
-        room = code
-        if create != False:
-            room = generate_unique_code(4)
-            rooms[room] = {"members": 0, "messages": []}
-            db.collection('Rooms').document(room).set({"code": room})
-        elif code not in rooms:
-            return render_template("home.html", error="Room does not exist.", code=code, name=name)
-        
-        session["room"] = room
-        session["name"] = name
-        return redirect(url_for("room"))
-
+def home():    
     return render_template("home.html")
 
 @app.route("/room")
 def room():
-    room = session.get("room")
-    if room is None or session.get("name") is None or room not in rooms:
-        return redirect(url_for("home"))
 
-    return render_template("room.html", code=room, messages=rooms[room]["messages"])
+    return render_template("room.html")
 
-@app.route("/encrypt", methods=["POST"])
-def encrypt_message():
-    data = request.get_json()
-    plaintext = data['plaintext']
-    ciphertext, key = enhanced_rail_fence_encrypt(plaintext)
-    return jsonify({'ciphertext': ciphertext, 'key': key})
+# @app.route("/encrypt", methods=["POST"])
+# def encrypt_message():
+#     data = request.get_json()
+#     plaintext = data['plaintext']
+#     ciphertext, key = enhanced_rail_fence_encrypt(plaintext)
+#     return jsonify({'ciphertext': ciphertext, 'key': key})
 
-@app.route("/decrypt", methods=["POST"])
-def decrypt_message():
-    data = request.get_json()
-    ciphertext = data['ciphertext']
-    key = data['key']
-    plaintext = enhanced_rail_fence_decrypt(ciphertext, key)
-    return jsonify({'plaintext': plaintext})
+# @app.route("/decrypt", methods=["POST"])
+# def decrypt_message():
+#     data = request.get_json()
+#     ciphertext = data['ciphertext']
+#     key = data['key']
+#     plaintext = enhanced_rail_fence_decrypt(ciphertext, key)
+#     return jsonify({'plaintext': plaintext})
 
-@socketio.on("message")
-def message(data):
-    room = session.get("room")
-    if room not in rooms:
-        return 
+# @socketio.on("message")
+# def message(data):
+#     room = session.get("room")
+#     if room not in rooms:
+#         return 
     
-    content = {
-        "name": session.get("name"),
-        "message": data["data"]
-    }
+#     content = {
+#         "name": session.get("name"),
+#         "message": data["data"]
+#     }
 
-    # Encrypt outgoing message
-    encrypted_message, key = enhanced_rail_fence_encrypt(data["data"])
-    content["message"] = encrypted_message
+#     # Encrypt outgoing message
+#     encrypted_message, key = enhanced_rail_fence_encrypt(data["data"])
+#     content["message"] = encrypted_message
 
-    decrypted_message = enhanced_rail_fence_decrypt(encrypted_message, key)
-    content["decrypted_message"] = decrypted_message
+#     decrypted_message = enhanced_rail_fence_decrypt(encrypted_message, key)
+#     content["decrypted_message"] = decrypted_message
 
-    send(content, to=room)
-    rooms[room]["messages"].append(content)
-    print(f"{session.get('name')} said: {data['data']}")
-    print(f"{session.get('name')} encrypted: {content['message']}")
-    print(f"{session.get('name')} decrypted: {content['decrypted_message']}")
+#     send(content, to=room)
+#     rooms[room]["messages"].append(content)
+#     print(f"{session.get('name')} said: {data['data']}")
+#     print(f"{session.get('name')} encrypted: {content['message']}")
+#     print(f"{session.get('name')} decrypted: {content['decrypted_message']}")
 
-@socketio.on("connect")
-def connect(auth):
-    room = session.get("room")
-    name = session.get("name")
-    if not room or not name:
-        return
-    if room not in rooms:
-        leave_room(room)
-        return
+# @socketio.on("connect")
+# def connect(auth):
+#     room = session.get("room")
+#     name = session.get("name")
+#     if not room or not name:
+#         return
+#     if room not in rooms:
+#         leave_room(room)
+#         return
     
-    join_room(room)
-    send({"name": name, "message": "has entered the room"}, to=room)
-    rooms[room]["members"] += 1
-    print(f"{name} joined room {room}")
+#     join_room(room)
+#     send({"name": name, "message": "has entered the room"}, to=room)
+#     rooms[room]["members"] += 1
+#     print(f"{name} joined room {room}")
 
-@socketio.on("disconnect")
-def disconnect():
-    room = session.get("room")
-    name = session.get("name")
-    leave_room(room)
+# @socketio.on("disconnect")
+# def disconnect():
+#     room = session.get("room")
+#     name = session.get("name")
+#     leave_room(room)
 
-    if room in rooms:
-        rooms[room]["members"] -= 1
-        if rooms[room]["members"] <= 0:
-            del rooms[room]
+#     if room in rooms:
+#         rooms[room]["members"] -= 1
+#         if rooms[room]["members"] <= 0:
+#             del rooms[room]
     
-    send({"name": name, "message": "has left the room"}, to=room)
-    print(f"{name} has left the room {room}")
+#     send({"name": name, "message": "has left the room"}, to=room)
+#     print(f"{name} has left the room {room}")
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

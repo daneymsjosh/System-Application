@@ -5,7 +5,9 @@
     <input type="text" placeholder="Room Code" name="code" value="{{code}}" />
     <button type="submit" name="join">Join a Room</button>
   </div>
-  <button type="submit" name="create" class="create-btn">Create a Room</button>
+  <button type="submit" id="create-room" class="create-btn">
+    Create a Room
+  </button>
   <div>
     <button type="submit" id="logout" name="logout">Logout</button>
   </div>
@@ -22,11 +24,22 @@
 <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-storage.js"></script>
 <script src="static/firebase-init.js"></script>
 <script>
+  var rooms = [];
+
+  function generateUniqueCode(length) {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let code;
+    code = "";
+    for (let i = 0; i < length; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+  }
+
   // Logout
   const logout = document.querySelector("#logout");
   logout.addEventListener("click", (e) => {
     e.preventDefault();
-
     auth
       .signOut()
       .then(() => {
@@ -36,6 +49,47 @@
       .catch((error) => {
         console.log(error.message);
       });
+  });
+
+  // Create a Room
+  const createRoomButton = document.querySelector("#create-room");
+  createRoomButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    // Get username of the currently logged in user
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = db.collection("Users").doc(user.uid);
+      userRef
+        .get()
+        .then((doc) => {
+          if (doc.exists) {
+            const name = doc.data().username;
+            const code = generateUniqueCode(4);
+
+            // Save room code to rooms array
+            rooms.push(code);
+
+            // Save room code to Firestore Rooms collection
+            db.collection("Rooms")
+              .doc(code)
+              .set({
+                code: code,
+              })
+              .then(() => {
+                console.log(`Room code ${code} added to Firestore.`);
+                window.location.replace("{{ url_for('room') }}");
+              })
+              .catch((error) => {
+                console.error("Error adding room code to Firestore: ", error);
+              });
+          } else {
+            console.log("No such document!");
+          }
+        })
+        .catch((error) => {
+          console.error("Error getting document:", error);
+        });
+    }
   });
 </script>
 {% endblock %}
