@@ -2,8 +2,14 @@
 <form method="post" class="buttons">
   <h3>Enter The Chat Room</h3>
   <div class="join">
-    <input type="text" placeholder="Room Code" name="code" value="{{code}}" />
-    <button type="submit" name="join">Join a Room</button>
+    <input
+      type="text"
+      placeholder="Room Code"
+      id="code"
+      name="code"
+      value="{{code}}"
+    />
+    <button type="submit" id="join-room" name="join">Join a Room</button>
   </div>
   <button type="submit" id="create-room" class="create-btn">
     Create a Room
@@ -25,6 +31,23 @@
 <script src="static/firebase-init.js"></script>
 <script>
   var rooms = [];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    retrieveRooms();
+  });
+
+  function retrieveRooms() {
+    db.collection("Rooms")
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          rooms.push(doc.id); // Add room code to the rooms array
+        });
+      })
+      .catch((error) => {
+        console.error("Error retrieving rooms from Firestore:", error);
+      });
+  }
 
   function generateUniqueCode(length) {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -49,6 +72,24 @@
       .catch((error) => {
         console.log(error.message);
       });
+  });
+
+  // Join a Room
+  const joinRoomButton = document.querySelector("#join-room");
+  joinRoomButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    const codeInput = document.querySelector("#code");
+    const code = codeInput.value.toUpperCase();
+    console.log(code);
+    // Check if the entered room code exists in the rooms array
+    if (rooms.includes(code)) {
+      // Redirect to the room with the entered code
+      console.log(`Joined room code ${code}.`);
+      window.location.replace("{{ url_for('room') }}");
+    } else {
+      // Display an error message
+      console.error("Room does not exist.");
+    }
   });
 
   // Create a Room

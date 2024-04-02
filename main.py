@@ -15,19 +15,6 @@ firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-rooms = {}
-
-def generate_unique_code(length):
-    while True:
-        code = ""
-        for _ in range(length):
-            code += random.choice(ascii_uppercase)
-        
-        if code not in rooms:
-            break
-    
-    return code
-
 @app.route("/", methods=["POST", "GET"])
 def login():
     return render_template("login.html")
