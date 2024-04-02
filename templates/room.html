@@ -1,6 +1,5 @@
 {% extends 'base.html' %} {% block content %}
 <div class="message-box">
-  <!-- <h2>Chat Room: {{code}}</h2> -->
   <h2>Chat Room:</h2>
   <div class="messages" id="messages"></div>
   <div class="inputs">
@@ -16,38 +15,51 @@
     </button>
   </div>
 </div>
-<!-- <script type="text/javascript">
-  var socketio = io();
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-storage.js"></script>
+<script src="static/firebase-init.js"></script>
+<script>
+  // Function to check if user is already in the Members collection of the room
+  function checkUserInRoom(code, username) {
+    const roomRef = db.collection("Rooms").doc(code);
+    const membersRef = roomRef.collection("Members");
+    membersRef
+      .where("name", "==", username)
+      .get()
+      .then((querySnapshot) => {
+        if (querySnapshot.empty) {
+          // User is not in the room, display message and record user
+          const message = document.createElement("div");
+          message.classList.add("text");
+          message.innerHTML = `
+            <span>
+              <strong>${username}</strong>: "has entered the room"
+            </span>
+            <span class="muted">${new Date().toLocaleString()}</span>
+          `;
+          document.getElementById("messages").appendChild(message);
 
-  const messages = document.getElementById("messages");
+          // Record user in the Members collection
+          membersRef.add({ name: username });
+        }
+      })
+      .catch((error) => {
+        console.error("Error checking user in room:", error);
+      });
+  }
 
-  const createMessage = (name, encryptedMsg, decryptedMsg) => {
-    const content = `
-    <div class="text">
-        <span>
-            <strong>${name}</strong>: ${encryptedMsg}
-        </span>
-        <span class="muted">
-            ${new Date().toLocaleString()}
-        </span>
-    </div>
-    `;
-    messages.innerHTML += content;
-  };
-
-  socketio.on("message", (data) => {
-    createMessage(data.name, data.message, data.decrypted_message);
+  // Call checkUserInRoom function when the page is loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    console.log(code);
+    const username = urlParams.get("username");
+    console.log(username);
+    if (username && code) {
+      checkUserInRoom(code, username);
+    }
   });
-
-  const sendMessage = () => {
-    const message = document.getElementById("message");
-    if (message.value == "") return;
-    socketio.emit("message", { data: message.value });
-    message.value = "";
-  };
 </script>
-{% for msg in messages %}
-<script type="text/javascript">
-  createMessage("{{msg.name}}", "{{msg.message}}", "{{msg.decrypted_message}}");
-</script> -->
-{% endfor %} {% endblock %}
+{% endblock %}

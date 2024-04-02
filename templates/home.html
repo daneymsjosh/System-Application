@@ -85,7 +85,23 @@
     if (rooms.includes(code)) {
       // Redirect to the room with the entered code
       console.log(`Joined room code ${code}.`);
-      window.location.replace("{{ url_for('room') }}");
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = db.collection("Users").doc(user.uid);
+        userRef
+          .get()
+          .then((doc) => {
+            if (doc.exists) {
+              const name = doc.data().username;
+              window.location.href = `{{ url_for('room') }}?code=${code}&username=${name}`;
+            } else {
+              console.log("No such document!");
+            }
+          })
+          .catch((error) => {
+            console.error("Error getting document:", error);
+          });
+      }
     } else {
       // Display an error message
       console.error("Room does not exist.");
@@ -106,6 +122,7 @@
           if (doc.exists) {
             const name = doc.data().username;
             const code = generateUniqueCode(4);
+            console.log(name);
 
             // Save room code to rooms array
             rooms.push(code);
@@ -118,7 +135,7 @@
               })
               .then(() => {
                 console.log(`Room code ${code} added to Firestore.`);
-                window.location.replace("{{ url_for('room') }}");
+                window.location.href = `{{ url_for('room') }}?code=${code}&username=${name}`;
               })
               .catch((error) => {
                 console.error("Error adding room code to Firestore: ", error);
