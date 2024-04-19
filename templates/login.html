@@ -11,11 +11,8 @@
   </div>
   <button type="submit" name="login" class="create-btn">Login</button>
   <a href="{{ url_for('signup') }}" style="float: right">Create Account</a>
-  {% if error %}
-  <ul>
-    <li>{{ error }}</li>
-  </ul>
-  {% endif %}
+  <!-- Error Message -->
+  <div id="error-message" style="color: red; margin-top: 10px"></div>
 </form>
 
 <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
@@ -26,25 +23,26 @@
 <script>
   // Login
   const loginForm = document.querySelector("#login-form");
-  loginForm.addEventListener("submit", (e) => {
+  const errorMessage = document.querySelector("#error-message");
+
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Get User Info
     const email = loginForm["email"].value;
     const password = loginForm["password"].value;
 
-    // Login the User
-    auth
-      .signInWithEmailAndPassword(email, password)
-      .then((cred) => {
-        loginForm.reset();
-        const username = cred.user.username;
-        localStorage.setItem("isLoggedIn", true); // Store login status as boolean
-        window.location.replace("{{ url_for('home') }}");
-      })
-      .catch((error) => {
-        console.log(error.message);
-      });
+    try {
+      // Login the User
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      loginForm.reset();
+      const username = cred.user.username;
+      localStorage.setItem("isLoggedIn", true); // Store login status as boolean
+      window.location.replace("{{ url_for('home') }}");
+    } catch (error) {
+      console.log(error.message);
+      errorMessage.textContent = "Invalid Credentials. Please try again.";
+    }
   });
 </script>
 {% endblock %}

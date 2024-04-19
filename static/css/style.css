@@ -48,6 +48,8 @@
 
 h2 {
   text-align: center;
+  margin-left: 5px;
+  margin-bottom: 10px;
 }
 
 #message {
@@ -66,4 +68,29 @@ h2 {
 .muted {
   font-size: 10px;
   color: darkgray;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn {
+  margin-left: 5px;
+  margin-top: 15px;
+  margin-right: 5px;
+  padding: 4px 8px;
+  background-color: #e0e0e0;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  align-self: flex-start;
+  margin-left: auto;
+}
+
+.back-btn:hover {
+  background-color: #a6f4ff;
 }

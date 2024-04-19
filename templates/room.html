@@ -1,6 +1,9 @@
 {% extends 'base.html' %} {% block content %}
 <div class="message-box">
-  <h2>Chat Room:</h2>
+  <div class="title-container">
+    <h2 id="room-title">Chat Room:</h2>
+    <a href="/home" class="back-btn">Back</a>
+  </div>
   <div class="messages" id="messages"></div>
   <div class="inputs">
     <input
@@ -59,6 +62,7 @@
     console.log(username);
     if (username && code) {
       checkUserInRoom(code, username);
+      document.getElementById("room-title").textContent += ` ${code}`;
     }
   });
 </script>

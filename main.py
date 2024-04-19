@@ -11,6 +11,7 @@ app.config["SECRET_KEY"] = "railfence"
 socketio = SocketIO(app)
 
 cred = credentials.Certificate("sdk_key/thesis-system-key.json")
+# cred = credentials.Certificate("/home/thesisvibe/mysite/sdk_key/thesis-system-key.json")
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -45,26 +46,6 @@ def decrypt_message():
     key = data["key"]
     decrypted_message = enhanced_rail_fence_decrypt(encrypted_message, key)
     return jsonify({"decrypted_message": decrypted_message})
-
-# @socketio.on("message")
-# def message(data):
-    
-#     content = {
-#         "name": session.get("name"),
-#         "message": data["data"]
-#     }
-
-#     # Encrypt outgoing message
-#     encrypted_message, key = enhanced_rail_fence_encrypt(data["data"])
-#     content["message"] = encrypted_message
-
-#     decrypted_message = enhanced_rail_fence_decrypt(encrypted_message, key)
-#     content["decrypted_message"] = decrypted_message
-
-#     send(content, to=room)
-#     print(f"{session.get('name')} said: {data['data']}")
-#     print(f"{session.get('name')} encrypted: {content['message']}")
-#     print(f"{session.get('name')} decrypted: {content['decrypted_message']}")
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
