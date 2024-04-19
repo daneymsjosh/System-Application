@@ -76,6 +76,11 @@ h2 {
   justify-content: center;
 }
 
+.toggle-container {
+  margin-left: 5px;
+  margin-bottom: 10px;
+}
+
 .back-btn {
   margin-left: 5px;
   margin-top: 15px;

@@ -4,6 +4,10 @@
     <h2 id="room-title">Chat Room:</h2>
     <a href="/home" class="back-btn">Back</a>
   </div>
+  <div class="toggle-container">
+    <label for="toggleBtn">Show Encrypted</label>
+    <input type="checkbox" id="toggleBtn" />
+  </div>
   <div class="messages" id="messages"></div>
   <div class="inputs">
     <input
@@ -67,12 +71,21 @@
   });
 </script>
 <script type="text/javascript">
+  let showEncrypted = false;
+  document.getElementById("toggleBtn").addEventListener("change", function () {
+    showEncrypted = !showEncrypted;
+    displayMessages();
+  });
   // Function to display messages
-  const createMessage = (name, message, timestamp) => {
+  const createMessage = (name, messageData, timestamp) => {
     const content = `
     <div class="text">
         <span>
-            <strong>${name}</strong>: ${message}
+            <strong>${name}</strong>: ${
+      showEncrypted
+        ? messageData.encrypted_message
+        : messageData.decrypted_message
+    }
         </span>
         <span class="muted">${timestamp}</span>
     </div>
@@ -135,14 +148,14 @@
   };
 
   // Function to display messages from Firestore
-  const displayMessages = (querySnapshot) => {
+  const displayMessages = async () => {
+    const querySnapshot = await messagesRef.orderBy("timestamp").get();
+
+    document.getElementById("messages").innerHTML = ""; // Clear existing messages
+
     querySnapshot.forEach((doc) => {
       const messageData = doc.data();
-      createMessage(
-        messageData.name,
-        messageData.message,
-        messageData.timestamp
-      );
+      createMessage(messageData.name, messageData, messageData.timestamp);
     });
   };
 
