@@ -62,4 +62,96 @@
     }
   });
 </script>
+<script type="text/javascript">
+  // Function to display messages
+  const createMessage = (name, message, timestamp) => {
+    const content = `
+    <div class="text">
+        <span>
+            <strong>${name}</strong>: ${message}
+        </span>
+        <span class="muted">${timestamp}</span>
+    </div>
+    `;
+    document.getElementById("messages").innerHTML += content;
+  };
+
+  // Function to send a message
+  const sendMessage = async () => {
+    const messageInput = document.getElementById("message");
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const username = urlParams.get("username");
+
+    // Encrypt the message
+    let response = await fetch("/encrypt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: message }),
+    });
+    let data = await response.json();
+    const encrypted_message = data.encrypted_message;
+    const key = data.key;
+
+    // Decrypt the message for storage
+    response = await fetch("/decrypt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ encrypted_message: encrypted_message, key: key }),
+    });
+    data = await response.json();
+    const decrypted_message = data.decrypted_message;
+
+    // Save the message to Firestore
+    const roomRef = db.collection("Rooms").doc(code);
+    const messagesRef = roomRef.collection("Messages");
+
+    messagesRef
+      .add({
+        name: username,
+        message: message,
+        encrypted_message: encrypted_message,
+        decrypted_message: decrypted_message,
+        timestamp: new Date().toLocaleString(),
+      })
+      .then(() => {
+        // Clear the message input after successfully sending the message
+        messageInput.value = "";
+      })
+      .catch((error) => {
+        console.error("Error sending message:", error);
+      });
+  };
+
+  // Function to display messages from Firestore
+  const displayMessages = (querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      const messageData = doc.data();
+      createMessage(
+        messageData.name,
+        messageData.message,
+        messageData.timestamp
+      );
+    });
+  };
+
+  // Get the room code from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get("code");
+
+  // Listen for new messages in Firestore and display them
+  const roomRef = db.collection("Rooms").doc(code);
+  const messagesRef = roomRef.collection("Messages");
+  messagesRef.orderBy("timestamp").onSnapshot((querySnapshot) => {
+    document.getElementById("messages").innerHTML = ""; // Clear existing messages
+    displayMessages(querySnapshot);
+  });
+</script>
 {% endblock %}
